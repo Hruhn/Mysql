@@ -1,0 +1,21 @@
+1.首先先获取所有用户首次登录时间
+2.然后将用户所有登录时间表左连接上用户首次登录时间，并计算当前记录的登录时间离首次登录时间距离多久，记为date_diff
+3.以最初登录时间为分组，利用sum和case计算首日留存，次日留存，3日留存......n日留存人数，依据date_diff判断
+
+
+
+with tmp as(
+select user_id, min(date(log_time)) first_time
+from login_tb
+group by user_id)
+
+select 
+    first_time,
+    sum(case when diff=0 then 1 else 0 end) as a
+from
+(select tmp.user_id, date(log_time) log_time, first_time, DATEDIFF(log_time, first_time) diff
+from
+login_tb left join tmp
+on login_tb.user_id = tmp.user_id
+order by login_tb.user_id, log_time) as a
+group by first_time
